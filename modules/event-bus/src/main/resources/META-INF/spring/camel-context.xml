@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+     Copyright 2005-2015 Red Hat, Inc.
+
+     Red Hat licenses this file to you under the Apache License, version
+     2.0 (the "License"); you may not use this file except in compliance
+     with the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+     implied.  See the License for the specific language governing
+     permissions and limitations under the License.
+
+-->
+<!-- Configures the Camel Context-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:camel="http://camel.apache.org/schema/spring"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+  <bean class="io.fabric8.mq.core.MQConnectionFactory" id="amqConnectionFactory">
+    <property name="userName" value="admin"/>
+    <property name="password" value="admin"/>
+  </bean>
+  <bean class="io.fabric8.mq.camel.AMQComponent" id="amq"/>
+  <camelContext id="camelContext-52ac76ee-a0ea-4ff8-844f-6b474010bf47" xmlns="http://camel.apache.org/schema/spring">
+    <route id="event-in">
+      <from id="_from1" uri="amq:queue:events"/>
+      <log id="invokation" message="New event received!"/>
+      <to id="_to1" uri="websocket://events?port=9090&amp;sendToAll=true"/>
+    </route>
+  </camelContext>
+</beans>

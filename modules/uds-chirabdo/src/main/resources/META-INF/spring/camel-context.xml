@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+     Copyright 2005-2015 Red Hat, Inc.
+
+     Red Hat licenses this file to you under the Apache License, version
+     2.0 (the "License"); you may not use this file except in compliance
+     with the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+     implied.  See the License for the specific language governing
+     permissions and limitations under the License.
+
+-->
+<!-- Configures the Camel Context-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:camel="http://camel.apache.org/schema/spring"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+  <bean class="io.fabric8.mq.core.MQConnectionFactory" id="amqConnectionFactory">
+    <property name="userName" value="admin"/>
+    <property name="password" value="admin"/>
+  </bean>
+  <bean class="io.fabric8.mq.camel.AMQComponent" id="amq"/>
+  <camelContext id="camelContext-1276c865-678b-497c-ab79-ba0705366add" xmlns="http://camel.apache.org/schema/spring">
+    <route id="admission-in">
+      <from id="_from1" uri="amq:topic:admission"/>
+      <log id="invokation" message="Admission message received!"/>
+      <log id="invokation body" message="Body : ${body}"/>
+      <filter id="filterAbdoAdmission">
+        <xpath>/admission/udsCode = 'ABDO'</xpath>
+        <to id="_to1" uri="direct:processMessage"/>
+      </filter>
+    </route>
+    <route id="processMessage">
+      <from id="_from2" uri="direct:processMessage"/>
+      <log id="logProcessedMessage" message="Processing message: ${body}"/>
+      <wireTap id="toNotifyAdmission" uri="direct:notifyAdmissionUDS"/>
+      <multicast>
+         <to uri="direct:notifyLaboratoire"/>
+      </multicast>
+    </route>
+    <route id="notifyAdmissionUDS">
+      <from id="_from3" uri="direct:notifyAdmissionUDS"/>
+      <setHeader headerName="udsCode" id="udsCode">
+        <xpath resultType="java.lang.String">/admission/udsCode/text()</xpath>
+      </setHeader>
+      <setHeader headerName="firstname" id="firstname">
+        <xpath resultType="java.lang.String">/admission/patient/firstname/text()</xpath>
+      </setHeader>
+      <setHeader headerName="lastname" id="lastname">
+        <xpath resultType="java.lang.String">/admission/patient/lastname/text()</xpath>
+      </setHeader>
+      <setBody id="eventBody">
+        <simple>Adm. Chirurgie Adbominale de ${header.firstname} ${header.lastname}</simple>
+      </setBody>
+      <to id="_to2" uri="amq:queue:events"/>
+    </route>
+    <route id="notifyLaboratoire">
+      <from uri="direct:notifyLaboratoire"/>
+      <setHeader headerName="patientId" id="patientId">
+        <xpath resultType="java.lang.String">/admission/patient/id/text()</xpath>
+      </setHeader>
+      <setHeader headerName="CamelHttpMethod">
+         <constant>POST</constant>
+      </setHeader>
+      <to uri="http4://laboratoire:80/api/labo/enregistrement/${headers.patientId}"/>
+    </route>
+  </camelContext>
+</beans>
