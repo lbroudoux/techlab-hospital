@@ -47,8 +47,19 @@
     
     <route id="doRegister">
       <from id="doRegisterFrom" uri="direct:register"/>
+      <log id="invokation register" message="Register request processing"/>
+      <log id="register body" message="Body: ${body}"/>
+      <setHeader headerName="udsCode" id="udsCode">
+        <xpath resultType="java.lang.String">/admission/udsCode/text()</xpath>
+      </setHeader>
+      <setHeader headerName="firstname" id="firstname">
+        <xpath resultType="java.lang.String">/admission/patient/firstname/text()</xpath>
+      </setHeader>
+      <setHeader headerName="lastname" id="lastname">
+        <xpath resultType="java.lang.String">/admission/patient/lastname/text()</xpath>
+      </setHeader>
       <setBody>
-         <simple>Enregistrement Laboratoire pour le patient ${header.patientid}</simple>
+         <simple>Enregistrement Laboratoire pour ${header.firstname} ${header.lastname} par ${header.udsCode}</simple>
       </setBody>
       <to uri="amq:queue:events"/>
     </route>

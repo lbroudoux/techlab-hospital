@@ -41,6 +41,7 @@
       <wireTap id="toNotifyAdmission" uri="direct:notifyAdmissionUDS"/>
       <multicast>
          <to uri="direct:notifyLaboratoire"/>
+         <to uri="direct:notifyImagerie"/>
       </multicast>
     </route>
     <route id="notifyAdmissionUDS">
@@ -68,6 +69,11 @@
          <constant>POST</constant>
       </setHeader>
       <to uri="http4://laboratoire:80/api/labo/enregistrement/${headers.patientId}"/>
+    </route>
+    <route id="notifyImagerie">
+      <from uri="direct:notifyImagerie"/>
+      <log message="Notifying imagerie with admission: ${body}"/>
+      <to uri="amq:queue:imagerie"/>
     </route>
   </camelContext>
 </beans>

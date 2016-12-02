@@ -39,9 +39,13 @@
       <from id="_from2" uri="direct:processMessage"/>
       <log id="logProcessedMessage" message="Processing message: ${body}"/>
       <wireTap id="toNotifyAdmission" uri="direct:notifyAdmissionUDS"/>
+      <multicast>
+         <to uri="direct:notifyLaboratoire"/>
+         <to uri="direct:notifyImagerie"/>
+      </multicast>
     </route>
     <route id="notitfyAdmissionUDS">
-      <from uri="direct:notifyAdmissionUDS"/>
+      <from id="_from3" uri="direct:notifyAdmissionUDS"/>
       <setHeader headerName="udsCode" id="udsCode">
         <xpath resultType="java.lang.String">/admission/udsCode/text()</xpath>
       </setHeader>
@@ -54,7 +58,22 @@
       <setBody id="eventBody">
         <simple>Adm. Chirurgie Orthopédique de ${header.firstname} ${header.lastname}</simple>
       </setBody>
-      <to uri="amq:queue:events"/>
+      <to id="_to2" uri="amq:queue:events"/>
+    </route>
+    <route id="notifyLaboratoire">
+      <from uri="direct:notifyLaboratoire"/>
+      <setHeader headerName="patientId" id="patientId">
+        <xpath resultType="java.lang.String">/admission/patient/id/text()</xpath>
+      </setHeader>
+      <setHeader headerName="CamelHttpMethod">
+         <constant>POST</constant>
+      </setHeader>
+      <to uri="http4://laboratoire:80/api/labo/enregistrement/${headers.patientId}"/>
+    </route>
+    <route id="notifyImagerie">
+      <from uri="direct:notifyImagerie"/>
+      <log message="Notifying imagerie with admission: ${body}"/>
+      <to uri="amq:queue:imagerie"/>
     </route>
   </camelContext>
 </beans>
