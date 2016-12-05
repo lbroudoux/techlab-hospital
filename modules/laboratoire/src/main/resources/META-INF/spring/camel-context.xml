@@ -20,16 +20,14 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
   xmlns:camel="http://camel.apache.org/schema/spring"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
-  
-  <bean id="amqConnectionFactory" class="io.fabric8.mq.core.MQConnectionFactory">
-      <property name="userName" value="admin"/>
-      <property name="password" value="admin"/>
+  <bean class="io.fabric8.mq.core.MQConnectionFactory" id="amqConnectionFactory">
+    <property name="userName" value="admin"/>
+    <property name="password" value="admin"/>
   </bean>
-   
-  <bean id="amq" class="io.fabric8.mq.camel.AMQComponent"></bean>
-  
+  <bean class="io.fabric8.mq.camel.AMQComponent" id="amq"/>
   <camelContext id="camelContext-597e7e3f-83e3-4479-9393-174ad1486e4f" xmlns="http://camel.apache.org/schema/spring">
-    <camel:restConfiguration component="jetty" port="8082" bindingMode="auto" enableCORS="true" contextPath="/api">
+    <camel:restConfiguration bindingMode="auto" component="jetty"
+      contextPath="/api" enableCORS="true" port="8082">
       <camel:corsHeaders key="Access-Control-Allow-Origin" value="*"/>
       <camel:corsHeaders key="Access-Control-Allow-Methods" value="GET"/>
     </camel:restConfiguration>
@@ -37,14 +35,13 @@
       <camel:post uri="/enregistrement/{patientid}">
         <camel:to uri="direct:register"/>
       </camel:post>
-      <camel:post uri="/test/{patientid}/ordertest" consumes="application/xml">
+      <camel:post consumes="application/xml" uri="/test/{patientid}/ordertest">
         <camel:to uri="direct:orderTest"/>
       </camel:post>
-      <camel:get uri="/resultat/{orderid}" >
+      <camel:get uri="/resultat/{orderid}">
         <camel:to uri="direct:returnResult"/>
       </camel:get>
     </camel:rest>
-    
     <route id="doRegister">
       <from id="doRegisterFrom" uri="direct:register"/>
       <log id="invokation register" message="Register request processing"/>
@@ -58,18 +55,18 @@
       <setHeader headerName="lastname" id="lastname">
         <xpath resultType="java.lang.String">/admission/patient/lastname/text()</xpath>
       </setHeader>
-      <setBody>
-         <simple>Enregistrement Laboratoire pour ${header.firstname} ${header.lastname} par ${header.udsCode}</simple>
+      <setBody id="_setBody1">
+        <simple>Enregistrement Laboratoire pour ${header.firstname} ${header.lastname} par ${header.udsCode}</simple>
       </setBody>
-      <to uri="amq:queue:events"/>
+      <to id="_to1" uri="amq:queue:events"/>
     </route>
     <route id="doOrderTest">
       <from id="doOrderTestFrom" uri="direct:orderTest"/>
-      <to uri="log:output"/>
+      <to id="_to2" uri="log:output"/>
     </route>
     <route id="doReturnResult">
       <from id="doReturnResultFrom" uri="direct:returnResult"/>
-      <to uri="log:output"/>
+      <to id="_to3" uri="log:output"/>
     </route>
   </camelContext>
 </beans>

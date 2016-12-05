@@ -27,7 +27,7 @@
   <bean class="io.fabric8.mq.camel.AMQComponent" id="amq"/>
   <camelContext id="camelContext-a1462d75-0040-492c-86b5-79cd5b5a4087" xmlns="http://camel.apache.org/schema/spring">
     <route id="uds-in">
-      <from uri="amq:queue:imagerie"/>
+      <from id="_from1" uri="amq:queue:imagerie"/>
       <setHeader headerName="udsCode" id="udsCode">
         <xpath resultType="java.lang.String">/admission/udsCode/text()</xpath>
       </setHeader>
@@ -37,10 +37,10 @@
       <setHeader headerName="lastname" id="lastname">
         <xpath resultType="java.lang.String">/admission/patient/lastname/text()</xpath>
       </setHeader>
-      <setBody>
-         <simple>Enregistrement Imagerie pour ${header.firstname} ${header.lastname} par ${header.udsCode}</simple>
+      <setBody id="_setBody1">
+        <simple>Enregistrement Imagerie pour ${header.firstname} ${header.lastname} par ${header.udsCode}</simple>
       </setBody>
-      <to uri="amq:queue:events"/>
+      <to id="_to1" uri="amq:queue:events"/>
     </route>
   </camelContext>
 </beans>
