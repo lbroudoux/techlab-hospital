@@ -67,6 +67,7 @@
     <route id="processAdmission">
       <from id="_from4" uri="direct:processAdmission"/>
       <bean id="admissionSvc" method="processAdmission" ref="admissionSvc"/>
+      <log id="sendToAdmissionTopic" message="Sending to topic:admission"/>
       <to id="toAdmissionTopic" uri="amq:topic:admission"/>
       <wireTap id="toNotifyAdmission" uri="direct:notifyAdmission"/>
     </route>
@@ -84,6 +85,7 @@
       <setBody id="eventBody">
         <simple>Admission administrative de ${header.firstname} ${header.lastname} vers ${header.udsCode}</simple>
       </setBody>
+      <log id="sendToEventsTopic" message="Sending to queue:events"/>
       <to id="toEvents" uri="amq:queue:events"/>
     </route>
   </camelContext>

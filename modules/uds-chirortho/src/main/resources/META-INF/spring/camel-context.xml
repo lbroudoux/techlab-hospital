@@ -30,7 +30,7 @@
       <from id="_from1" uri="amq:topic:admission"/>
       <log id="invokation" message="Admission message received!"/>
       <log id="invokation body" message="Body : ${body}"/>
-      <filter id="filterAbdoAdmission">
+      <filter id="filterOrthoAdmission">
         <xpath>/admission/udsCode = 'ORTHO'</xpath>
         <to id="_to1" uri="direct:processMessage"/>
       </filter>
