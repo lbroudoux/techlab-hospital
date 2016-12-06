@@ -9,8 +9,8 @@
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>Fabric8 :: Quickstarts :: Java :: Camel Spring</name>
-  <description>Camel route using Spring XML in a standalone Java container</description>
+  <name>TechLab :: Hospital :: API-Gateway</name>
+  <description>Camel route exposing REST API for TechLab Hospital</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
