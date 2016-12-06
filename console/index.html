@@ -103,6 +103,7 @@
               <h3 class="panel-title">Evenements</h3>
             </div>
             <div class="panel-body">
+              <p class="text-right"><button id="clearEvents" type="button" class="btn btn-default">Clear</button></p>
               <div id="eventMsgDiv">
               </div>
             </div>
@@ -115,11 +116,12 @@
     <script src="js/bootstrap.min.js"></script>
     <script>
     var OPENSHIFT_HOST = "192.168.99.100";
-    var API_GATEWAY_PORT = "31547";
-    var ESB_EVENTS_PORT = "32707";
+    var API_GATEWAY_PORT = "31185";
+    var ESB_EVENTS_PORT = "32634";
     var MAX_ESB_MSG_DISPLAY = 12;
     var MAX_CONSOLE_LINE_DISPLAY = 12;
 
+    var esbmsgsocket = null;
     var eventMsgArray = [];
     var errorMsgArray = [];
 
@@ -137,6 +139,7 @@
         $("#api_gateway_port").val(API_GATEWAY_PORT);
       } else {
         API_GATEWAY_PORT = value;
+        populatePatientTable();
       }
     });
     $("#esb_events_port").blur(function(){
@@ -145,6 +148,10 @@
         $("#esb_events_port").val(ESB_EVENTS_PORT);
       } else {
         ESB_EVENTS_PORT = value;
+        if (esbmsgsocket != null) {
+          esbmsgsocket.close();
+        }
+        connectEvents();
       }
     });
     $("#registerButton").click(function(){
@@ -159,6 +166,10 @@
 
   		setTimeout(populatePatientTable(), 2000);
     });
+    $("#clearEvents").click(function(){
+      eventMsgArray = [];
+      $('#eventMsgDiv').html("");
+    });
 
     $(document).ready(function() {
       populatePatientTable();
@@ -172,7 +183,7 @@
 
     function connectEvents() {
       try {
-        var esbmsgsocket = new WebSocket("ws://"+OPENSHIFT_HOST+":"+ESB_EVENTS_PORT+"/events");
+        esbmsgsocket = new WebSocket("ws://"+OPENSHIFT_HOST+":"+ESB_EVENTS_PORT+"/events");
   			esbmsgsocket.onopen = function(){console.log('Starting getting event-bus messages ......');}
 
   			esbmsgsocket.onmessage = function(msg){
@@ -221,22 +232,24 @@
   		.fail(function(data) {
   		})
   		.always(function(data) {
-  			console.log(data.responseText);
-  			var lineByline = data.responseText.split('\n');
-  			$.each(lineByline , function(index,value){
-  					if (value == null || value == ""){
-  						return;
-  					}
-  					tableContent += '<tr>';
+        if (data != null) {
+    			console.log(data.responseText);
+    			var lineByline = data.responseText.split('\n');
+    			$.each(lineByline , function(index,value){
+    					if (value == null || value == ""){
+    						return;
+    					}
+    					tableContent += '<tr>';
 
-  					var tabBytab = value.split('\t');
-  					$.each(tabBytab , function(indext,valuet){
-  						if (valuet != null || valuet != "")
-  						 tableContent += '<td>' + valuet + '</td>';
-  					});
-  					tableContent += '</tr>';
-  			});
-  			$('#patienttablebody').html(tableContent);
+    					var tabBytab = value.split('\t');
+    					$.each(tabBytab , function(indext,valuet){
+    						if (valuet != null || valuet != "")
+    						 tableContent += '<td>' + valuet + '</td>';
+    					});
+    					tableContent += '</tr>';
+    			});
+    			$('#patienttablebody').html(tableContent);
+        }
   		});
     }
     </script>
