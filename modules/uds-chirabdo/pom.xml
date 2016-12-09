@@ -5,8 +5,10 @@
   <groupId>com.github.lbroudoux.techlab</groupId>
   <artifactId>uds-chirabdo</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <name>Fabric8 :: Quickstarts :: Java :: Camel Spring</name>
+  
+  <name>TechLab :: Hospital :: UDS-ChirAbdo</name>
   <description>Camel route using Spring XML in a standalone Java container</description>
+  
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     

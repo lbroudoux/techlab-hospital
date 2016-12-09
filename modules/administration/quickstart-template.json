@@ -99,8 +99,6 @@
         "name": "${SERVICE_NAME}"
       },
       "spec": {
-        "clusterIP": "None",
-        "deprecatedPublicIPs": [],
         "ports": [
           {
             "protocol": "TCP",
@@ -115,6 +113,8 @@
             "name": "camel"
           }
         ],
+        "type": "ClusterIP",
+        "sessionAffinity": "None",
         "selector": {
           "container": "java",
           "project": "${APP_NAME}",

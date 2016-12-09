@@ -8,7 +8,7 @@
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>Fabric8 :: Quickstarts :: Java :: Camel Spring</name>
+  <name>TechLab :: Hospital :: UDS-ChirOrtho</name>
   <description>Camel route using Spring XML in a standalone Java container</description>
 
   <properties>
