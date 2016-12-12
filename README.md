@@ -1,6 +1,6 @@
 # techlab-hospital
 
-This demo helps demonstrate how [Red Hat JBoss Fuse solution](https://developers.redhat.com/products/fuse/overview/) can be used on combination of [OpenShift](https://www.openshift.org) to provides Integration as a Microservices platform.
+This demo helps demonstrate how [Red Hat JBoss Fuse solution](https://developers.redhat.com/products/fuse/overview/) can be used on combination of [OpenShift](https://www.openshift.org) to provide Integration as a Microservices platform.
 
 The business scenario can be introduced that way: an hospital is a very complex organization involving many different units working together; from transversal services units like laboratory, radiology to administration holding central view of patient going through dedicated Health-care units focused on specific health issues.
 
