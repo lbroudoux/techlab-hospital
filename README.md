@@ -13,6 +13,8 @@ As a consequence each unit has selected the best technology for the job and ther
 
 In this demonstration, we'll focus on the patient admission process: when patient comes into hospital for surgery (for example), he or she is facing a sole unit that is the Administration. This unit is then in charge of publishing an event saying 'Administrative admission of patient done in surgery HCU X' ; this event should then being processed by the target unit whom in turn has to notify transversal services of the patient incoming.
 
+_Note: this demonstration is a derivative work from Christina Lin's healthcare demo on OpenShift (see https://github.com/weimeilin79/healthcaredemos2i). My aim was to simplify Christina's demo but also to diversify the range of demonstrated technologies using Apache Camel._
+
 ## Architecture overview
 
 The demonstration is built onto 4 kinds of modules as shown in picture below.
