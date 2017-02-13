@@ -46,9 +46,10 @@ It is assumed that you have some kind of OpenShift cluster instance running and 
 
 You should also have the `oc` client line interface tool installed on your machine. Pick the corresponding OpenShift version from [this page](https://github.com/openshift/origin/releases).
 
-Once your OpenShift instance is up and running, ensure you've got the Red Hat Fuse Integration Services images installed onto OpenShift. You ca check this going to the catalogue view of OpenShift web console. If not present, you can run the following command for installing missing image streams and templates :
+Once your OpenShift instance is up and running, ensure you've got the Red Hat Fuse Integration Services images installed onto OpenShift. You can check this going to the catalogue view of OpenShift web console. If not present, you can run the following command for installing missing image streams and templates :
 
     oc create -f https://raw.githubusercontent.com/openshift/openshift-ansible/master/roles/openshift_examples/files/examples/v1.3/xpaas-streams/fis-image-streams.json -n openshift
+    oc create -f https://raw.githubusercontent.com/openshift/openshift-ansible/master/roles/openshift_examples/files/examples/v1.3/xpaas-streams/jboss-image-streams.json -n openshift
     oc create -f https://raw.githubusercontent.com/openshift/openshift-ansible/master/roles/openshift_examples/files/examples/v1.3/xpaas-templates/amq62-basic.json -n openshift
 
 You need now to deploy a JBoss A-MQ instance in order to later deploy the project's modules. In order to isolate stuffs, create a new OpenShift project and then add a `JBoss A-MQ 6.2 basic` application, letting all the default values _expecting for username and password that both should be set to `admin`_.
