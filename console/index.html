@@ -82,6 +82,7 @@
               <h2 class="panel-title"><img src="images/database.png" height="28" width="28">Patients</h2>
             </div>
             <div class="panel-body">
+              <p class="text-right"><button id="refreshPatients" type="button" class="btn btn-success">Refresh</button></p>
               <table class="table table-striped table-hover" >
         			  <thead>
           			  <tr>
@@ -116,8 +117,8 @@
     <script src="js/bootstrap.min.js"></script>
     <script>
     var OPENSHIFT_HOST = "192.168.99.101";
-    var API_GATEWAY_PORT = "31362";
-    var ESB_EVENTS_PORT = "30569";
+    var API_GATEWAY_PORT = "30128";
+    var ESB_EVENTS_PORT = "31023";
     var MAX_ESB_MSG_DISPLAY = 12;
     var MAX_CONSOLE_LINE_DISPLAY = 12;
 
@@ -174,6 +175,9 @@
       eventMsgArray = [];
       $('#eventMsgDiv').html("");
     });
+    $("#refreshPatients").click(function(){
+      populatePatientTable();
+    });
 
     $(document).ready(function() {
       populatePatientTable();
@@ -229,32 +233,29 @@
     function populatePatientTable() {
       var tableContent = '';
       $.get("http://"+OPENSHIFT_HOST+":"+API_GATEWAY_PORT+"/api/hospital/patients/all", function( data ) {
-  			  console.log('In handler !');
-  		})
-  		.done(function() {
-  		})
-  		.fail(function(data) {
-  		})
-  		.always(function(data) {
-        if (data != null) {
-    			console.log(data.responseText);
-    			var lineByline = data.responseText.split('\n');
-    			$.each(lineByline , function(index,value){
-    					if (value == null || value == ""){
-    						return;
-    					}
-    					tableContent += '<tr>';
+          console.log('In handler !');
+          if (data != null) {
+            console.log(JSON.stringify(data));
+            var lineByline = data.split('\n');
+            $.each(lineByline , function(index,value){
+                if (value == null || value == ""){
+                  return;
+                }
+                tableContent += '<tr>';
 
-    					var tabBytab = value.split('\t');
-    					$.each(tabBytab , function(indext,valuet){
-    						if (valuet != null || valuet != "")
-    						 tableContent += '<td>' + valuet + '</td>';
-    					});
-    					tableContent += '</tr>';
-    			});
-    			$('#patienttablebody').html(tableContent);
-        }
-  		});
+                var tabBytab = value.split('\t');
+                $.each(tabBytab , function(indext,valuet){
+                  if (valuet != null || valuet != "")
+                   tableContent += '<td>' + valuet + '</td>';
+                });
+                tableContent += '</tr>';
+            });
+            $('#patienttablebody').html(tableContent);
+          }
+      })
+      .fail(function(data) {
+        console.log('In fail ! - ' + JSON.stringify(data));
+      });
     }
     </script>
   </body>
