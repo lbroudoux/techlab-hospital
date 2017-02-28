@@ -15,11 +15,13 @@ In this demonstration, we'll focus on the patient admission process: when patien
 
 _Note: this demonstration is a derivative work from Christina Lin's healthcare demo on OpenShift (see https://github.com/weimeilin79/healthcaredemos2i). My aim was to simplify Christina's demo but also to diversify the range of demonstrated technologies using Apache Camel._
 
+*28-Feb-2017 update* We've complete this use case with the addition of API Management capabilities on top of demonstration. If your interested, just check the [documentation](https://github.com/lbroudoux/techlab-hospital/blob/master/README-API-MANAGEMENT.md).
+
 ## Architecture overview
 
 The demonstration is built onto 4 kinds of modules as shown in picture below.
 
-![overview](https://raw.githubusercontent.com/lbroudoux/techlab-hospital/master/architecture.png)  
+![overview](https://raw.githubusercontent.com/lbroudoux/techlab-hospital/master/assets/architecture.png)  
 
 From right to left on the following picture, we've got:
 * Hospital transversal modules (`laboratoire` and `imagerie`), responsible for dealing with patient admission once patient has been received into a Health-care Unit. They are notified throught dedicated channel that are REST services and Messaging Queue,
@@ -31,7 +33,7 @@ From right to left on the following picture, we've got:
 
 For testing/demonstration purpose, we introduce a web console allowing you to register an admission for an incoming patient, checking list of admitted patients and receiving business events to control that admission process is executing well.
 
-![overview](https://raw.githubusercontent.com/lbroudoux/techlab-hospital/master/console-screenshot.png)  
+![overview](https://raw.githubusercontent.com/lbroudoux/techlab-hospital/master/assets/console-screenshot.png)  
 
 Register a patient involves the admission form on the left. Following/tracking business events is done through the panel on the right where events appears as process flows.
 
