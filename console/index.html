@@ -115,9 +115,9 @@
     <script src="js/jquery.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script>
-    var OPENSHIFT_HOST = "192.168.99.100";
-    var API_GATEWAY_PORT = "31185";
-    var ESB_EVENTS_PORT = "32634";
+    var OPENSHIFT_HOST = "192.168.99.101";
+    var API_GATEWAY_PORT = "31362";
+    var ESB_EVENTS_PORT = "30569";
     var MAX_ESB_MSG_DISPLAY = 12;
     var MAX_CONSOLE_LINE_DISPLAY = 12;
 
@@ -155,13 +155,17 @@
       }
     });
     $("#registerButton").click(function(){
-      $.ajax({
-  		   type: "GET",
-  		   dataType: "jsonp",
-  			 url: "http://"+OPENSHIFT_HOST+":"+API_GATEWAY_PORT+"/api/hospital/admission/"+$('input[name=firstname]').val()+"/"+$('input[name=lastname]').val()+"/"+$('input[name=patientid]').val(),
-  		   success: function(data){
-  		     console.log(data);
-  		   }
+      $.post("http://"+OPENSHIFT_HOST+":"+API_GATEWAY_PORT+"/api/hospital/admission/"+$('input[name=firstname]').val()+"/"+$('input[name=lastname]').val()+"/"+$('input[name=patientid]').val(), function( data ) {
+  			  console.log('In handler !');
+  		})
+  		.done(function() {
+  		})
+  		.fail(function(data) {
+  		})
+  		.always(function(data) {
+        if (data != null) {
+    			console.log(data.responseText);
+        }
   		});
 
   		setTimeout(populatePatientTable(), 2000);
