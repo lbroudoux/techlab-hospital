@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configures the Camel Context-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="         http://camel.apache.org/schema/spring          http://camel.apache.org/schema/spring/camel-spring.xsd         http://www.springframework.org/schema/beans          http://www.springframework.org/schema/beans/spring-beans.xsd         http://www.springframework.org/schema/context          http://www.springframework.org/schema/context/spring-context.xsd">
+   
+   <!-- 
+         Lets connect the Camel ActiveMQ component to the broker.
+    -->
+   <bean class="org.apache.activemq.camel.component.ActiveMQComponent" id="activemq">
+      <property name="brokerURL" value="${broker.url}"/>
+      <property name="userName" value="${broker.username}"/>
+      <property name="password" value="${broker.password}"/>
+      <property name="usePooledConnection" value="false"/>
+   </bean>
+   <!--
+        The namespace for the camelContext element in Blueprint is 'http://camel.apache.org/schema/blueprint'. 
+        Additionally,  we can also define namespace prefixes we want to use them 
+        in the XPath expressions in our CBR.
+
+        While it is not required to assign id's to the <camelContext/> and <route/> 
+        elements, it is a good idea to set those for runtime management purposes 
+        (logging, JMX MBeans, ...)
+    -->
+   <camelContext id="techlab-uds-chirabdo" xmlns="http://camel.apache.org/schema/spring">
+      <route id="admission-in">
+	      <from id="_from1" uri="activemq:topic:admission"/>
+	      <log id="invokation" message="Admission message received!"/>
+	      <log id="invokation body" message="Body : ${body}"/>
+	      <filter id="filterAbdoAdmission">
+	        <xpath>/admission/udsCode = 'ABDO'</xpath>
+	        <to id="_to1" uri="direct:processMessage"/>
+	      </filter>
+	    </route>
+	    <route id="processMessage">
+	      <from id="_from2" uri="direct:processMessage"/>
+	      <log id="logProcessedMessage" message="Processing message: ${body}"/>
+	      <wireTap id="toNotifyAdmission" uri="direct:notifyAdmissionUDS"/>
+	      <multicast id="_multicast1">
+	        <to id="_to3" uri="direct:notifyLaboratoire"/>
+	        <to id="_to4" uri="direct:notifyImagerie"/>
+	      </multicast>
+	    </route>
+	    <route id="notifyAdmissionUDS">
+	      <from id="_from3" uri="direct:notifyAdmissionUDS"/>
+	      <setHeader headerName="udsCode" id="udsCode">
+	        <xpath resultType="java.lang.String">/admission/udsCode/text()</xpath>
+	      </setHeader>
+	      <setHeader headerName="firstname" id="firstname">
+	        <xpath resultType="java.lang.String">/admission/patient/firstname/text()</xpath>
+	      </setHeader>
+	      <setHeader headerName="lastname" id="lastname">
+	        <xpath resultType="java.lang.String">/admission/patient/lastname/text()</xpath>
+	      </setHeader>
+	      <setBody id="eventBody">
+	        <simple>Adm. Chirurgie Adbominale de ${header.firstname} ${header.lastname}</simple>
+	      </setBody>
+	      <to id="_to2" uri="activemq:queue:events"/>
+	    </route>
+	    <route id="notifyLaboratoire">
+	      <from id="_from4" uri="direct:notifyLaboratoire"/>
+	      <setHeader headerName="patientId" id="patientId">
+	        <xpath resultType="java.lang.String">/admission/patient/id/text()</xpath>
+	      </setHeader>
+	      <setHeader headerName="CamelHttpMethod" id="_setHeader1">
+	        <constant>POST</constant>
+	      </setHeader>
+	      <to id="_to5" uri="http4://localhost:8082/api/labo/enregistrement/$simple{headers.patientId}"/>
+	    </route>
+	    <route id="notifyImagerie">
+	      <from id="_from5" uri="direct:notifyImagerie"/>
+	      <log id="_log1" message="Notifying imagerie with admission: ${body}"/>
+	      <to id="_to6" uri="activemq:queue:imagerie"/>
+	    </route>
+   </camelContext>
+</beans>

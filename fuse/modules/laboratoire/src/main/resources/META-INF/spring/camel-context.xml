@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configures the Camel Context-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="         http://camel.apache.org/schema/spring          http://camel.apache.org/schema/spring/camel-spring.xsd         http://www.springframework.org/schema/beans          http://www.springframework.org/schema/beans/spring-beans.xsd         http://www.springframework.org/schema/context          http://www.springframework.org/schema/context/spring-context.xsd">
+   <!-- 
+         Lets connect the Camel ActiveMQ component to the broker.
+    -->
+   <bean class="org.apache.activemq.camel.component.ActiveMQComponent" id="activemq">
+      <property name="brokerURL" value="${broker.url}"/>
+      <property name="userName" value="${broker.username}"/>
+      <property name="password" value="${broker.password}"/>
+      <property name="usePooledConnection" value="false"/>
+   </bean>
+   <!--
+        The namespace for the camelContext element in Blueprint is 'http://camel.apache.org/schema/blueprint'. 
+        Additionally,  we can also define namespace prefixes we want to use them 
+        in the XPath expressions in our CBR.
+
+        While it is not required to assign id's to the <camelContext/> and <route/> 
+        elements, it is a good idea to set those for runtime management purposes 
+        (logging, JMX MBeans, ...)
+    -->
+   <camelContext id="techlab-laboratoire" xmlns="http://camel.apache.org/schema/spring">
+      <restConfiguration bindingMode="off" component="jetty"
+         contextPath="/api" enableCORS="true" port="8082">
+         <corsHeaders key="Access-Control-Allow-Origin" value="*"/>
+         <corsHeaders key="Access-Control-Allow-Methods" value="GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, CONNECT, PATCH"/>
+         <corsHeaders key="Access-Control-Allow-Headers" value="Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers"/>
+      </restConfiguration>
+      <rest path="/labo">
+         <post uri="/enregistrement/{patientid}">
+            <to uri="direct:register"/>
+         </post>
+         <post consumes="application/xml" uri="/test/{patientid}/ordertest">
+            <to uri="direct:orderTest"/>
+         </post>
+         <get uri="/resultat/{orderid}">
+            <to uri="direct:returnResult"/>
+         </get>
+      </rest>
+      <route id="doRegister">
+         <from id="doRegisterFrom" uri="direct:register"/>
+         <log id="invokation register" message="Register request processing"/>
+         <!--
+         Do not log below because we've got an instance of org.apache.camel.converter.stream.InputStreamCache.
+         Logging it seems to empty the buffer, so that following calls to toString() produce empty content...
+         <log id="register body" message="Body: ${body}"/>
+         -->
+         <setHeader headerName="udsCode" id="udsCode">
+            <xpath resultType="java.lang.String">/admission/udsCode/text()</xpath>
+         </setHeader>
+         <setHeader headerName="firstname" id="firstname">
+            <xpath resultType="java.lang.String">/admission/patient/firstname/text()</xpath>
+         </setHeader>
+         <setHeader headerName="lastname" id="lastname">
+            <xpath resultType="java.lang.String">/admission/patient/lastname/text()</xpath>
+         </setHeader>
+         <setBody id="_setBody1">
+            <simple>Enregistrement Laboratoire pour ${header.firstname} ${header.lastname} par ${header.udsCode}</simple>
+         </setBody>
+         <to id="_to1" uri="activemq:queue:events"/>
+      </route>
+      <route id="doOrderTest">
+         <from id="doOrderTestFrom" uri="direct:orderTest"/>
+         <to id="_to2" uri="log:output"/>
+      </route>
+      <route id="doReturnResult">
+         <from id="doReturnResultFrom" uri="direct:returnResult"/>
+         <log id="_log1" message="In return result"/>
+         <to id="_to3" uri="log:output"/>
+      </route>
+   </camelContext>
+</beans>
