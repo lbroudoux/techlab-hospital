@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+     Copyright 2005-2015 Red Hat, Inc.
+
+     Red Hat licenses this file to you under the Apache License, version
+     2.0 (the "License"); you may not use this file except in compliance
+     with the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+     implied.  See the License for the specific language governing
+     permissions and limitations under the License.
+
+-->
+<!-- Configures the Camel Context-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:camel="http://camel.apache.org/schema/spring"
+  xmlns:cxf="http://camel.apache.org/schema/cxf"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd            http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd            http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+  <cxf:cxfEndpoint address="http://0.0.0.0:8081/cxf/patient"
+    id="patientEndpoint" serviceClass="com.github.lbroudoux.techlab.administration.ws.PatientEndpoint"/>
+  <bean class="io.fabric8.mq.core.MQConnectionFactory" id="amqConnectionFactory">
+    <property name="userName" value="admin"/>
+    <property name="password" value="admin"/>
+  </bean>
+  <bean class="io.fabric8.mq.camel.AMQComponent" id="amq"/>
+  <bean
+    class="com.github.lbroudoux.techlab.administration.svc.PatientService" id="patientSvc"/>
+  <bean
+    class="com.github.lbroudoux.techlab.administration.svc.AdmissionService" id="admissionSvc">
+    <property name="patientService" ref="patientSvc"/>
+  </bean>
+  <bean
+    class="com.github.lbroudoux.techlab.administration.svc.AdmitPatientProcessor" id="admitPatientProcessor">
+    <property name="patientService" ref="patientSvc"/>
+  </bean>
+  <bean
+    class="com.github.lbroudoux.techlab.administration.svc.GetAllPatientsProcessor" id="getAllPatientsProcessor">
+    <property name="patientService" ref="patientSvc"/>
+  </bean>
+  <camelContext id="camelContext-2408e4f7-c17a-40f1-a0be-1539bb631b17" xmlns="http://camel.apache.org/schema/spring">
+    <route id="ws-to-jms">
+      <from id="_from1" uri="cxf:bean:patientEndpoint"/>
+      <log id="invokation" message="Patient WS invoked"/>
+      <log id="operation" message="Operation is ${header.operationName}"/>
+      <recipientList id="dispatchToCorrectRoute">
+        <simple>direct:${header.operationName}</simple>
+      </recipientList>
+    </route>
+    <route id="admitPatient">
+      <from id="_from2" uri="direct:admitPatient"/>
+      <log id="admitPatient" message="Processing admitPatient"/>
+      <process id="admitPatientP" ref="admitPatientProcessor"/>
+      <log id="admitPatient response" message="Body ${body}"/>
+      <wireTap id="toProcessAdmission" uri="direct:processAdmission"/>
+    </route>
+    <route id="getAllPatients">
+      <from id="_from3" uri="direct:getAllPatients"/>
+      <log id="getAllPatients" message="Processing getAllPatients"/>
+      <process id="getAllPatientsP" ref="getAllPatientsProcessor"/>
+      <log id="getAllPatients response" message="Body ${body}"/>
+    </route>
+    <route id="processAdmission">
+      <from id="_from4" uri="direct:processAdmission"/>
+      <bean id="admissionSvc" method="processAdmission" ref="admissionSvc"/>
+      <log id="sendToAdmissionTopic" message="Sending to topic:admission"/>
+      <to id="toAdmissionTopic" uri="amq:topic:admission"/>
+      <wireTap id="toNotifyAdmission" uri="direct:notifyAdmission"/>
+    </route>
+    <route id="notifyAdmission">
+      <from id="_from5" uri="direct:notifyAdmission"/>
+      <setHeader headerName="udsCode" id="udsCode">
+        <xpath resultType="java.lang.String">/admission/udsCode/text()</xpath>
+      </setHeader>
+      <setHeader headerName="firstname" id="firstname">
+        <xpath resultType="java.lang.String">/admission/patient/firstname/text()</xpath>
+      </setHeader>
+      <setHeader headerName="lastname" id="lastname">
+        <xpath resultType="java.lang.String">/admission/patient/lastname/text()</xpath>
+      </setHeader>
+      <setBody id="eventBody">
+        <simple>Admission administrative de ${header.firstname} ${header.lastname} vers ${header.udsCode}</simple>
+      </setBody>
+      <log id="sendToEventsTopic" message="Sending to queue:events"/>
+      <to id="toEvents" uri="amq:queue:events"/>
+    </route>
+  </camelContext>
+</beans>

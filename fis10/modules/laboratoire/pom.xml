@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.github.lbroudoux.techlab</groupId>
+  <artifactId>laboratoire</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <name>TechLab :: Hospital :: Laboratoire</name>
+  <description>Camel route exposing REST API for TechLab Hospital</description>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <!-- the version of the BOM, defining all the dependency versions -->
+    <!-- <fuse.version>6.2.1.redhat-084</fuse.version> -->
+    <fuse.version>6.3.0.redhat-067</fuse.version>
+    <camel.version>2.17.1</camel.version>
+    <cxf.version>3.1.5.redhat-630045</cxf.version>
+    <amq.version>5.11.0.redhat-621084</amq.version>
+    
+    <fabric8.version>2.2.0.redhat-079</fabric8.version>
+    <docker.maven.plugin.version>0.13.6</docker.maven.plugin.version>
+
+    <!-- Docker & Fabric8 Configs -->
+    <docker.from>registry.access.redhat.com/jboss-fuse-6/fis-java-openshift:1.0</docker.from>
+    <fabric8.dockerUser>fabric8/</fabric8.dockerUser>
+    <docker.image>${fabric8.dockerUser}${project.artifactId}:${project.version}</docker.image>
+    <docker.port.container.jolokia>8778</docker.port.container.jolokia>
+    <docker.port.container.camel>${http.port}</docker.port.container.camel>
+
+    <fabric8.env.A_MQ_SERVICE_NAME>BROKER_AMQ_TCP</fabric8.env.A_MQ_SERVICE_NAME>
+    
+    <fabric8.label.component>${project.artifactId}</fabric8.label.component>
+    <fabric8.label.container>java</fabric8.label.container>
+    <fabric8.label.group>hospital</fabric8.label.group>
+    <fabric8.iconRef>camel</fabric8.iconRef>
+    
+    <http.port>8082</http.port>
+    <fabric8.service.name>${project.artifactId}</fabric8.service.name>
+    <fabric8.service.port>80</fabric8.service.port>
+    <fabric8.service.type>LoadBalancer</fabric8.service.type>
+    <fabric8.service.containerPort>${http.port}</fabric8.service.containerPort>
+  </properties>
+  
+  <repositories>
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>ea.fusesource.org</id>
+      <name>FuseSource Community Early Access Release Repository</name>
+      <url>http://repo.fusesource.com/nexus/content/groups/ea</url>
+    </repository>
+    <repository>
+      <id>redhat-ga-repository</id>
+      <url>https://maven.repository.redhat.com/ga</url>
+    </repository>
+  </repositories>
+  
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-project-bom-with-platform-deps</artifactId>
+        <version>${fabric8.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-core</artifactId>
+      <version>${camel.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-spring</artifactId>
+      <version>${camel.version}</version>
+    </dependency>
+    
+    <!-- For Web Service with CXF -->
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-cxf</artifactId>
+      <version>${camel.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.cxf</groupId>
+      <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+      <version>${cxf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.cxf</groupId>
+      <artifactId>cxf-rt-transports-http-jetty</artifactId>
+      <version>${cxf.version}</version>
+    </dependency>
+  
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-jetty9</artifactId>
+      <version>${camel.version}</version>
+    </dependency>
+    
+    <!-- For A-MQ publication -->
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-camel</artifactId>
+      <version>${amq.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.fabric8.mq</groupId>
+      <artifactId>camel-amq</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.fabric8.mq</groupId>
+      <artifactId>mq-client</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.12</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.7.12</version>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-test-spring</artifactId>
+      <version>${camel.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.arquillian.junit</groupId>
+      <artifactId>arquillian-junit-container</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>fabric8-arquillian</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  
+  <pluginRepositories>
+    <pluginRepository>
+      <id>redhat-ga-repository</id>
+      <url>https://maven.repository.redhat.com/ga</url>
+    </pluginRepository>
+  </pluginRepositories>
+  <build>
+    <defaultGoal>install</defaultGoal>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.3</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.18.1</version>
+        <inherited>true</inherited>
+        <configuration>
+          <excludes>
+            <exclude>**/*KT.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>fabric8-maven-plugin</artifactId>
+        <version>${fabric8.version}</version>
+        <executions>
+          <execution>
+            <id>json</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>json</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>attach</id>
+            <phase>package</phase>
+            <goals>
+              <goal>attach</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>hawt-app-maven-plugin</artifactId>
+        <version>${fabric8.version}</version>
+        <executions>
+          <execution>
+            <id>hawt-app</id>
+            <goals>
+              <goal>build</goal>
+            </goals>
+            <configuration>
+              <javaMainClass>org.apache.camel.spring.Main</javaMainClass>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.jolokia</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>${docker.maven.plugin.version}</version>
+        <configuration>
+          <images>
+            <image>
+              <name>${docker.image}</name>
+              <build>
+                <from>${docker.from}</from>
+                <assembly>
+                  <basedir>/deployments</basedir>
+                  <descriptorRef>hawt-app</descriptorRef>
+                </assembly>
+                <env>
+                  <JAVA_LIB_DIR>/deployments/lib</JAVA_LIB_DIR>
+                  <JAVA_MAIN_CLASS>org.apache.camel.spring.Main</JAVA_MAIN_CLASS>
+                  <HTTP_PORT>${http.port}</HTTP_PORT>
+                </env>
+                <ports>
+                  <port>${http.port}</port>
+                </ports>
+              </build>
+            </image>
+          </images>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.4.0</version>
+        <configuration>
+          <mainClass>org.apache.camel.spring.Main</mainClass>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <profiles>
+    <profile>
+      <id>f8-build</id>
+      <build>
+        <defaultGoal>clean install docker:build fabric8:json</defaultGoal>
+      </build>
+    </profile>
+    <profile>
+      <id>f8-deploy</id>
+      <build>
+        <defaultGoal>clean install docker:build docker:push fabric8:json fabric8:apply</defaultGoal>
+      </build>
+      <properties>
+        <fabric8.recreate>true</fabric8.recreate>
+        <fabric8.imagePullPolicySnapshot>Always</fabric8.imagePullPolicySnapshot>
+      </properties>
+    </profile>
+    <profile>
+      <id>f8-local-deploy</id>
+      <build>
+        <defaultGoal>clean install docker:build fabric8:json fabric8:apply</defaultGoal>
+      </build>
+      <properties>
+        <fabric8.recreate>true</fabric8.recreate>
+      </properties>
+    </profile>
+  </profiles>
+</project>

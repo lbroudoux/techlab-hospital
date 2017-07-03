@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+     Copyright 2005-2015 Red Hat, Inc.
+
+     Red Hat licenses this file to you under the Apache License, version
+     2.0 (the "License"); you may not use this file except in compliance
+     with the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+     implied.  See the License for the specific language governing
+     permissions and limitations under the License.
+
+-->
+<!-- Configures the Camel Context-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:camel="http://camel.apache.org/schema/spring"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+  <bean class="io.fabric8.mq.core.MQConnectionFactory" id="amqConnectionFactory">
+    <property name="userName" value="admin"/>
+    <property name="password" value="admin"/>
+  </bean>
+  <bean class="io.fabric8.mq.camel.AMQComponent" id="amq"/>
+  <camelContext id="camelContext-a1462d75-0040-492c-86b5-79cd5b5a4087" xmlns="http://camel.apache.org/schema/spring">
+    <route id="uds-in">
+      <from id="_from1" uri="amq:queue:imagerie"/>
+      <setHeader headerName="udsCode" id="udsCode">
+        <xpath resultType="java.lang.String">/admission/udsCode/text()</xpath>
+      </setHeader>
+      <setHeader headerName="firstname" id="firstname">
+        <xpath resultType="java.lang.String">/admission/patient/firstname/text()</xpath>
+      </setHeader>
+      <setHeader headerName="lastname" id="lastname">
+        <xpath resultType="java.lang.String">/admission/patient/lastname/text()</xpath>
+      </setHeader>
+      <setBody id="_setBody1">
+        <simple>Enregistrement Imagerie pour ${header.firstname} ${header.lastname} par ${header.udsCode}</simple>
+      </setBody>
+      <to id="_to1" uri="amq:queue:events"/>
+    </route>
+  </camelContext>
+</beans>

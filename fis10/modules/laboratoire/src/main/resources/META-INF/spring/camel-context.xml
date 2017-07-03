@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+     Copyright 2005-2015 Red Hat, Inc.
+
+     Red Hat licenses this file to you under the Apache License, version
+     2.0 (the "License"); you may not use this file except in compliance
+     with the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+     implied.  See the License for the specific language governing
+     permissions and limitations under the License.
+
+-->
+<!-- Configures the Camel Context-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:camel="http://camel.apache.org/schema/spring"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+  <bean class="io.fabric8.mq.core.MQConnectionFactory" id="amqConnectionFactory">
+    <property name="userName" value="admin"/>
+    <property name="password" value="admin"/>
+  </bean>
+  <bean class="io.fabric8.mq.camel.AMQComponent" id="amq"/>
+  <camelContext id="camelContext-597e7e3f-83e3-4479-9393-174ad1486e4f" xmlns="http://camel.apache.org/schema/spring">
+    <camel:restConfiguration bindingMode="auto" component="jetty"
+      contextPath="/api" enableCORS="true" port="8082">
+      <camel:corsHeaders key="Access-Control-Allow-Origin" value="*"/>
+      <camel:corsHeaders key="Access-Control-Allow-Methods" value="GET"/>
+    </camel:restConfiguration>
+    <camel:rest path="/labo">
+      <camel:post uri="/enregistrement/{patientid}">
+        <camel:to uri="direct:register"/>
+      </camel:post>
+      <camel:post consumes="application/xml" uri="/test/{patientid}/ordertest">
+        <camel:to uri="direct:orderTest"/>
+      </camel:post>
+      <camel:get uri="/resultat/{orderid}">
+        <camel:to uri="direct:returnResult"/>
+      </camel:get>
+    </camel:rest>
+    <route id="doRegister">
+      <from id="doRegisterFrom" uri="direct:register"/>
+      <log id="invokation register" message="Register request processing"/>
+      <log id="register body" message="Body: ${body}"/>
+      <setHeader headerName="udsCode" id="udsCode">
+        <xpath resultType="java.lang.String">/admission/udsCode/text()</xpath>
+      </setHeader>
+      <setHeader headerName="firstname" id="firstname">
+        <xpath resultType="java.lang.String">/admission/patient/firstname/text()</xpath>
+      </setHeader>
+      <setHeader headerName="lastname" id="lastname">
+        <xpath resultType="java.lang.String">/admission/patient/lastname/text()</xpath>
+      </setHeader>
+      <setBody id="_setBody1">
+        <simple>Enregistrement Laboratoire pour ${header.firstname} ${header.lastname} par ${header.udsCode}</simple>
+      </setBody>
+      <to id="_to1" uri="amq:queue:events"/>
+    </route>
+    <route id="doOrderTest">
+      <from id="doOrderTestFrom" uri="direct:orderTest"/>
+      <to id="_to2" uri="log:output"/>
+    </route>
+    <route id="doReturnResult">
+      <from id="doReturnResultFrom" uri="direct:returnResult"/>
+      <to id="_to3" uri="log:output"/>
+    </route>
+  </camelContext>
+</beans>

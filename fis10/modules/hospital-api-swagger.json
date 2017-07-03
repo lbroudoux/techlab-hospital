@@ -1,0 +1,123 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API for Techlab Hospital Fuse+3scale on OpenShift demonstration",
+        "version": "1.0.0",
+        "title": "Red Hat Techlab Hospital API",
+        "termsOfService": "http://helloreverb.com/terms/",
+        "contact": {
+            "name": "lbroudou@redhat.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        }
+    },
+    "host": "hospital-api-techlab-hospital.192.168.99.101.xip.io",
+    "basePath": "/api/hospital",
+    "schemes": [
+        "http"
+    ],
+    "paths": {
+        "/patients/all": {
+            "get": {
+                "tags": [
+                    "patient"
+                ],
+                "summary": "Finds all patients",
+                "description": "Finds all registred patients within administration",
+                "operationId": "getAllPatients",
+                "produces": [
+                    "text/plain"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "user_key",
+                        "description": "Your access API Key",
+                        "type": "string",
+                        "x-data-threescale-name": "user_keys",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad formatted request"
+                    },
+                    "403": {
+                        "description": "Authorization issue"
+                    }
+                }
+            }
+        },
+        "/admission/{fn}/{ln}/{id}": {
+            "post": {
+                "tags": [
+                    "patient"
+                ],
+                "summary": "New patient admission",
+                "description": "Register a new patient admission within administration",
+                "operationId": "admission",
+                "produces": [
+                    "text/plain"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "fn",
+                        "description": "Firstname of patient",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "ln",
+                        "description": "Lastname of patient",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "description": "Identifier of patient",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "in": "body",
+                        "name": "user_key",
+                        "description": "Your access API Key",
+                        "x-data-threescale-name": "user_keys",
+                        "required": true,
+                        "schema": {
+                          "type": "string",
+                          "example": {
+                            "user_key": 1234567890
+                          }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplied"
+                    },
+                    "403": {
+                        "description": "Authorization issue"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+    }
+}
