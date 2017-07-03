@@ -115,9 +115,11 @@
     <script src="js/jquery.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script>
-    var USER_KEY = "7b0f1fe4c831a1e029db3e890bac9cbf";
-    var OPENSHIFT_HOST = "192.168.99.101";
-    var ESB_EVENTS_PORT = "31012";
+    //var USER_KEY = "7b0f1fe4c831a1e029db3e890bac9cbf";
+    var USER_KEY = "8b4b77d63ae384649bbd399850152074";
+    var OPENSHIFT_SUFFIX = "-techlab-hospital.192.168.99.100.nip.io"
+    var OPENSHIFT_HOST = "192.168.99.100";
+    var ESB_EVENTS_PORT = "30312";
     var MAX_ESB_MSG_DISPLAY = 12;
     var MAX_CONSOLE_LINE_DISPLAY = 12;
 
@@ -157,7 +159,8 @@
     });
     */
     $("#registerButton").click(function(){
-      $.post("http://hospital-api-techlab-hospital."+OPENSHIFT_HOST+".xip.io/api/hospital/admission/"+$('input[name=firstname]').val()+"/"+$('input[name=lastname]').val()+"/"+$('input[name=patientid]').val(),
+      //$.post("http://hospital-api-techlab-hospital."+OPENSHIFT_HOST+".xip.io/api/hospital/admission/"+$('input[name=firstname]').val()+"/"+$('input[name=lastname]').val()+"/"+$('input[name=patientid]').val(),
+      $.post("http://hospital-api"+OPENSHIFT_SUFFIX+"/api/hospital/admission/"+$('input[name=firstname]').val()+"/"+$('input[name=lastname]').val()+"/"+$('input[name=patientid]').val(),
         {user_key: USER_KEY},
         function( data ) {
   			  console.log('In handler !');
@@ -196,7 +199,8 @@
       try {
         //esbmsgsocket = new WebSocket("ws://"+OPENSHIFT_HOST+":"+ESB_EVENTS_PORT+"/events");
         //esbmsgsocket = new WebSocket("ws://hospital-event-techlab-hospital."+OPENSHIFT_HOST+".xip.io/events?user_key=dd1649d1ad8e5bca07687237604b248e");
-        esbmsgsocket = new WebSocket("ws://event-bus-techlab-hospital."+OPENSHIFT_HOST+".xip.io/events");
+        //esbmsgsocket = new WebSocket("ws://event-bus-techlab-hospital."+OPENSHIFT_HOST+".xip.io/events");
+        esbmsgsocket = new WebSocket("ws://event-bus"+OPENSHIFT_SUFFIX+"/events");
   			esbmsgsocket.onopen = function(){console.log('Starting getting event-bus messages ......');}
 
   			esbmsgsocket.onmessage = function(msg){
@@ -237,7 +241,8 @@
 
     function populatePatientTable() {
       var tableContent = '';
-      $.get("http://hospital-api-techlab-hospital."+OPENSHIFT_HOST+".xip.io/api/hospital/patients/all?user_key="+USER_KEY, function( data ) {
+      //$.get("http://hospital-api-techlab-hospital."+OPENSHIFT_HOST+".xip.io/api/hospital/patients/all?user_key="+USER_KEY, function( data ) {
+      $.get("http://hospital-api"+OPENSHIFT_SUFFIX+"/api/hospital/patients/all?user_key="+USER_KEY, function( data ) {
   			  console.log('In handler !');
           if (data != null) {
             console.log(data);
@@ -260,7 +265,7 @@
   		})
   		.fail(function(data) {
         console.log('In fail ! - ' + JSON.stringify(data));
-        alert('Authorization failure!');
+        alert('Authorization failure: limit reached!');
   		});
     }
     </script>

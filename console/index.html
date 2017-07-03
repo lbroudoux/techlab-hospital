@@ -116,9 +116,10 @@
     <script src="js/jquery.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script>
-    var OPENSHIFT_HOST = "192.168.99.101";
-    var API_GATEWAY_PORT = "30128";
-    var ESB_EVENTS_PORT = "31023";
+    var OPENSHIFT_SUFFIX = "-techlab-hospital.192.168.99.100.nip.io"
+    var OPENSHIFT_HOST = "192.168.99.100";
+    var API_GATEWAY_PORT = "30098";
+    var ESB_EVENTS_PORT = "30312";
     var MAX_ESB_MSG_DISPLAY = 12;
     var MAX_CONSOLE_LINE_DISPLAY = 12;
 
@@ -156,7 +157,8 @@
       }
     });
     $("#registerButton").click(function(){
-      $.post("http://"+OPENSHIFT_HOST+":"+API_GATEWAY_PORT+"/api/hospital/admission/"+$('input[name=firstname]').val()+"/"+$('input[name=lastname]').val()+"/"+$('input[name=patientid]').val(), function( data ) {
+      //$.post("http://"+OPENSHIFT_HOST+":"+API_GATEWAY_PORT+"/api/hospital/admission/"+$('input[name=firstname]').val()+"/"+$('input[name=lastname]').val()+"/"+$('input[name=patientid]').val(), function( data ) {
+      $.post("http://api-gateway"+OPENSHIFT_SUFFIX+"/api/hospital/admission/"+$('input[name=firstname]').val()+"/"+$('input[name=lastname]').val()+"/"+$('input[name=patientid]').val(), function( data ) {
   			  console.log('In handler !');
   		})
   		.done(function() {
@@ -191,7 +193,8 @@
 
     function connectEvents() {
       try {
-        esbmsgsocket = new WebSocket("ws://"+OPENSHIFT_HOST+":"+ESB_EVENTS_PORT+"/events");
+        //esbmsgsocket = new WebSocket("ws://"+OPENSHIFT_HOST+":"+ESB_EVENTS_PORT+"/events");
+        esbmsgsocket = new WebSocket("ws://event-bus"+OPENSHIFT_SUFFIX+"/events");
   			esbmsgsocket.onopen = function(){console.log('Starting getting event-bus messages ......');}
 
   			esbmsgsocket.onmessage = function(msg){
@@ -232,7 +235,8 @@
 
     function populatePatientTable() {
       var tableContent = '';
-      $.get("http://"+OPENSHIFT_HOST+":"+API_GATEWAY_PORT+"/api/hospital/patients/all", function( data ) {
+      //$.get("http://"+OPENSHIFT_HOST+":"+API_GATEWAY_PORT+"/api/hospital/patients/all", function( data ) {
+      $.get("http://api-gateway"+OPENSHIFT_SUFFIX+"/api/hospital/patients/all", function( data ) {
           console.log('In handler !');
           if (data != null) {
             console.log(JSON.stringify(data));
