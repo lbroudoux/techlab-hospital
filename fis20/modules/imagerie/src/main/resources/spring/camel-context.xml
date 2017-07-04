@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring       http://camel.apache.org/schema/spring/camel-spring.xsd">
+   <!-- Camel Routes -->
+   <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
+      <!--
+          The amq component ensures to use the broker in the kubernetes cluster.
+        -->
+      <route id="uds-in">
+         <from id="_from1" uri="amq:queue:imagerie"/>
+         <setHeader headerName="udsCode" id="udsCode">
+            <xpath resultType="java.lang.String">/admission/udsCode/text()</xpath>
+         </setHeader>
+         <setHeader headerName="firstname" id="firstname">
+            <xpath resultType="java.lang.String">/admission/patient/firstname/text()</xpath>
+         </setHeader>
+         <setHeader headerName="lastname" id="lastname">
+            <xpath resultType="java.lang.String">/admission/patient/lastname/text()</xpath>
+         </setHeader>
+         <setBody id="_setBody1">
+            <simple>Enregistrement Imagerie pour ${header.firstname} ${header.lastname} par ${header.udsCode}</simple>
+         </setBody>
+         <to id="_to1" uri="amq:queue:events"/>
+      </route>
+   </camelContext>
+</beans>

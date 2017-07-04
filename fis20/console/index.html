@@ -1,0 +1,266 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+  	<title>JBoss Fuse Hospital Demo</title>
+
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-menu">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">
+            <h1 class="logo">
+              <img alt="Brand" src="images/icon-health.png" height="42" width="42"/>
+            </h1>
+          </a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav" style="padding-left: 50px">
+            <li><h3 style="width: 350px">JBoss Fuse Hospital Demo</h3></li>
+          </ul>
+          <div class="navbar-form navbar-right" role="search" style="padding-top: 5px">
+            <div class="form-group">
+              <input id="openshift_host" type="text" class="form-control" placeholder="OPENSHIFT_HOST">
+              / <input id="api_gateway_port" type="text" class="form-control" placeholder="API_GATEWAY_PORT">
+              / <input id="esb_events_port" type="text" class="form-control" placeholder="ESB_EVENTS_PORT">
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="container-fluid">
+      <div class="jumbotron">
+        <h2>Hello JBoss Fuse on Openshift !</h2>
+    	  <p>This demo is to demonstrate how JBoss Fuse can help developing your healthcare system with microservices architecture</p>
+    	</div>
+      <div class="row">
+        <div class="col-md-7">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h2 class="panel-title"><img src="images/register.png" height="28" width="28"> Admission</h2>
+            </div>
+            <div class="panel-body">
+              <div class="form-horizontal">
+                <div class="form-group">
+                  <label for="firstname" class="col-lg-2 control-label">Prénom</label>
+                  <div class="col-lg-10">
+                    <input type="text" class="form-control" id="firstname" name="firstname" placeholder="Prénom">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="lastname" class="col-lg-2 control-label">Nom</label>
+                  <div class="col-lg-10">
+                    <input type="text" class="form-control" id="lastname" name="lastname" placeholder="Nom">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="patientid" class="col-lg-2 control-label">ID Patient</label>
+                  <div class="col-lg-10">
+                    <input type="text" class="form-control" id="patientid" name="patientid" placeholder="ID Patient">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-lg-10 col-lg-offset-2">
+                    <button type="reset" class="btn btn-default">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="registerButton">Submit</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h2 class="panel-title"><img src="images/database.png" height="28" width="28">Patients</h2>
+            </div>
+            <div class="panel-body">
+              <p class="text-right"><button id="refreshPatients" type="button" class="btn btn-success">Refresh</button></p>
+              <table class="table table-striped table-hover" >
+        			  <thead>
+          			  <tr>
+          			    <th>Nom</th>
+          			    <th>Prenom</th>
+          			    <th>ID</th>
+          			    <th>Sexe</th>
+          			  </tr>
+        			  <thead>
+          			<tbody id="patienttablebody">
+          			</tbody>
+        			</table>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Evenements</h3>
+            </div>
+            <div class="panel-body">
+              <p class="text-right"><button id="clearEvents" type="button" class="btn btn-default">Clear</button></p>
+              <div id="eventMsgDiv">
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script>
+    var OPENSHIFT_SUFFIX = "-techlab-demo-2.192.168.99.100.nip.io"
+    var OPENSHIFT_HOST = "192.168.99.100";
+    var API_GATEWAY_PORT = "30098";
+    var ESB_EVENTS_PORT = "30312";
+    var MAX_ESB_MSG_DISPLAY = 12;
+    var MAX_CONSOLE_LINE_DISPLAY = 12;
+
+    var esbmsgsocket = null;
+    var eventMsgArray = [];
+    var errorMsgArray = [];
+
+    $("#openshift_host").blur(function(){
+      var value = $("#openshift_host").val();
+      if (value === null || value === "") {
+        $("#openshift_host").val(OPENSHIFT_HOST);
+      } else {
+        OPENSHIFT_HOST = value;
+      }
+    });
+    $("#api_gateway_port").blur(function(){
+      var value = $("#api_gateway_port").val();
+      if (value === null || value === "") {
+        $("#api_gateway_port").val(API_GATEWAY_PORT);
+      } else {
+        API_GATEWAY_PORT = value;
+        populatePatientTable();
+      }
+    });
+    $("#esb_events_port").blur(function(){
+      var value = $("#esb_events_port").val();
+      if (value === null || value === "") {
+        $("#esb_events_port").val(ESB_EVENTS_PORT);
+      } else {
+        ESB_EVENTS_PORT = value;
+        if (esbmsgsocket != null) {
+          esbmsgsocket.close();
+        }
+        connectEvents();
+      }
+    });
+    $("#registerButton").click(function(){
+      //$.post("http://"+OPENSHIFT_HOST+":"+API_GATEWAY_PORT+"/api/hospital/admission/"+$('input[name=firstname]').val()+"/"+$('input[name=lastname]').val()+"/"+$('input[name=patientid]').val(), function( data ) {
+      $.post("http://api-gateway"+OPENSHIFT_SUFFIX+"/api/hospital/admission/"+$('input[name=firstname]').val()+"/"+$('input[name=lastname]').val()+"/"+$('input[name=patientid]').val(), function( data ) {
+  			  console.log('In handler !');
+  		})
+  		.done(function() {
+  		})
+  		.fail(function(data) {
+  		})
+  		.always(function(data) {
+        if (data != null) {
+    			console.log(data.responseText);
+        }
+  		});
+
+  		setTimeout(populatePatientTable(), 2000);
+    });
+    $("#clearEvents").click(function(){
+      eventMsgArray = [];
+      $('#eventMsgDiv').html("");
+    });
+    $("#refreshPatients").click(function(){
+      populatePatientTable();
+    });
+
+    $(document).ready(function() {
+      populatePatientTable();
+      if (!("WebSocket" in window)){
+    		$('#chatLog, input, button, #examples').fadeOut("fast");
+    		$('<p>Oh no, you need a browser that supports WebSockets. How about <a href="http://www.google.com/chrome">Google Chrome</a>?</p>').appendTo('#container');
+    	} else {
+        connectEvents();
+      }
+    });
+
+    function connectEvents() {
+      try {
+        //esbmsgsocket = new WebSocket("ws://"+OPENSHIFT_HOST+":"+ESB_EVENTS_PORT+"/events");
+        esbmsgsocket = new WebSocket("ws://event-bus"+OPENSHIFT_SUFFIX+"/events");
+  			esbmsgsocket.onopen = function(){console.log('Starting getting event-bus messages ......');}
+
+  			esbmsgsocket.onmessage = function(msg){
+  				eventMsgArray.push(createEventMsg(msg.data));
+  				if (eventMsgArray.length > MAX_ESB_MSG_DISPLAY){
+  					eventMsgArray.shift();
+  				}
+  				var msgContent = "";
+  				for (i = 0; i < eventMsgArray.length; i++) {
+  					msgContent += eventMsgArray[i];
+  				}
+  				$('#eventMsgDiv').html(msgContent);
+  			}
+  			esbmsgsocket.onclose = function(){console.log('Stop getting event-bus messages');}
+      } catch (exception) {
+
+      }
+    }
+
+    function message(consoleArray, msg){
+      consoleArray.push(msg);
+      if (consoleArray.length > MAX_CONSOLE_LINE_DISPLAY){
+        consoleArray.shift();
+      }
+      var msgContent = "";
+      for (i = 0; i < consoleArray.length; i++) {
+        msgContent += consoleArray[i];
+      }
+      return msgContent;
+    }
+
+    function createEventMsg(msg){
+      var msgContent = '<div class="alert alert-dismissible alert-info"><button type="button" class="close" data-dismiss="alert">&times;</button>';
+      msgContent += msg;
+      msgContent += '</div>';
+      return msgContent;
+    }
+
+    function populatePatientTable() {
+      var tableContent = '';
+      //$.get("http://"+OPENSHIFT_HOST+":"+API_GATEWAY_PORT+"/api/hospital/patients/all", function( data ) {
+      $.get("http://api-gateway"+OPENSHIFT_SUFFIX+"/api/hospital/patients/all", function( data ) {
+          console.log('In handler !');
+          if (data != null) {
+            console.log(JSON.stringify(data));
+            var lineByline = data.split('\n');
+            $.each(lineByline , function(index,value){
+                if (value == null || value == ""){
+                  return;
+                }
+                tableContent += '<tr>';
+
+                var tabBytab = value.split('\t');
+                $.each(tabBytab , function(indext,valuet){
+                  if (valuet != null || valuet != "")
+                   tableContent += '<td>' + valuet + '</td>';
+                });
+                tableContent += '</tr>';
+            });
+            $('#patienttablebody').html(tableContent);
+          }
+      })
+      .fail(function(data) {
+        console.log('In fail ! - ' + JSON.stringify(data));
+      });
+    }
+    </script>
+  </body>
+</html>

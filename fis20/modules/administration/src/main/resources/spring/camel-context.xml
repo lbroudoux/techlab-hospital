@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+   xmlns:cxf="http://camel.apache.org/schema/cxf"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="            http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring       http://camel.apache.org/schema/spring/camel-spring.xsd            http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+   
+   <cxf:cxfEndpoint address="http://0.0.0.0:8080/cxf/patient"
+      id="patientEndpoint" serviceClass="com.github.lbroudoux.techlab.administration.ws.PatientEndpoint"/>
+   <bean
+      class="com.github.lbroudoux.techlab.administration.svc.PatientService" id="patientSvc"/>
+   <bean
+      class="com.github.lbroudoux.techlab.administration.svc.AdmissionService" id="admissionSvc">
+      <property name="patientService" ref="patientSvc"/>
+   </bean>
+   <bean
+      class="com.github.lbroudoux.techlab.administration.svc.AdmitPatientProcessor" id="admitPatientProcessor">
+      <property name="patientService" ref="patientSvc"/>
+   </bean>
+   <bean
+      class="com.github.lbroudoux.techlab.administration.svc.GetAllPatientsProcessor" id="getAllPatientsProcessor">
+      <property name="patientService" ref="patientSvc"/>
+   </bean>
+   <!-- Camel Routes -->
+   <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
+      <!--
+         The amq component ensures to use the broker in the kubernetes cluster.
+        -->
+      <route id="ws-to-jms">
+         <from id="_from1" uri="cxf:bean:patientEndpoint"/>
+         <log id="invokation" message="Patient WS invoked"/>
+         <log id="operation" message="Operation is ${header.operationName}"/>
+         <recipientList id="dispatchToCorrectRoute">
+            <simple>direct:${header.operationName}</simple>
+         </recipientList>
+      </route>
+      <route id="admitPatient">
+         <from id="_from2" uri="direct:admitPatient"/>
+         <log id="admitPatient" message="Processing admitPatient"/>
+         <process id="admitPatientP" ref="admitPatientProcessor"/>
+         <log id="admitPatient response" message="Body ${body}"/>
+         <wireTap id="toProcessAdmission" uri="direct:processAdmission"/>
+      </route>
+      <route id="getAllPatients">
+         <from id="_from3" uri="direct:getAllPatients"/>
+         <log id="getAllPatients" message="Processing getAllPatients"/>
+         <process id="getAllPatientsP" ref="getAllPatientsProcessor"/>
+         <log id="getAllPatients response" message="Body ${body}"/>
+      </route>
+      <route id="processAdmission">
+         <from id="_from4" uri="direct:processAdmission"/>
+         <bean id="admissionSvc" method="processAdmission" ref="admissionSvc"/>
+         <log id="sendToAdmissionTopic" message="Sending to topic:admission"/>
+         <to id="toAdmissionTopic" uri="amq:topic:admission"/>
+         <wireTap id="toNotifyAdmission" uri="direct:notifyAdmission"/>
+      </route>
+      <route id="notifyAdmission">
+         <from id="_from5" uri="direct:notifyAdmission"/>
+         <setHeader headerName="udsCode" id="udsCode">
+            <xpath resultType="java.lang.String">/admission/udsCode/text()</xpath>
+         </setHeader>
+         <setHeader headerName="firstname" id="firstname">
+            <xpath resultType="java.lang.String">/admission/patient/firstname/text()</xpath>
+         </setHeader>
+         <setHeader headerName="lastname" id="lastname">
+            <xpath resultType="java.lang.String">/admission/patient/lastname/text()</xpath>
+         </setHeader>
+         <setBody id="eventBody">
+            <simple>Admission administrative de ${header.firstname} ${header.lastname} vers ${header.udsCode}</simple>
+         </setBody>
+         <log id="sendToEventsTopic" message="Sending to queue:events"/>
+         <to id="toEvents" uri="amq:queue:events"/>
+      </route>
+   </camelContext>
+</beans>

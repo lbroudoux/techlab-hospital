@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring       http://camel.apache.org/schema/spring/camel-spring.xsd">
+   <!-- Camel Routes -->
+   <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
+      <!--
+          The amq component ensures to use the broker in the kubernetes cluster.
+        -->
+      <restConfiguration bindingMode="auto" component="jetty"
+	      contextPath="/api" enableCORS="true" port="8082">
+	      <corsHeaders key="Access-Control-Allow-Origin" value="*"/>
+	      <corsHeaders key="Access-Control-Allow-Methods" value="GET"/>
+	    </restConfiguration>
+	    <rest path="/labo">
+	      <post uri="/enregistrement/{patientid}">
+	        <to uri="direct:register"/>
+	      </post>
+	      <post consumes="application/xml" uri="/test/{patientid}/ordertest">
+	        <to uri="direct:orderTest"/>
+	      </post>
+	      <get uri="/resultat/{orderid}">
+	        <to uri="direct:returnResult"/>
+	      </get>
+	    </rest>
+	    <route id="doRegister">
+	      <from id="doRegisterFrom" uri="direct:register"/>
+	      <log id="invokation register" message="Register request processing"/>
+	      <log id="register body" message="Body: ${body}"/>
+	      <setHeader headerName="udsCode" id="udsCode">
+	        <xpath resultType="java.lang.String">/admission/udsCode/text()</xpath>
+	      </setHeader>
+	      <setHeader headerName="firstname" id="firstname">
+	        <xpath resultType="java.lang.String">/admission/patient/firstname/text()</xpath>
+	      </setHeader>
+	      <setHeader headerName="lastname" id="lastname">
+	        <xpath resultType="java.lang.String">/admission/patient/lastname/text()</xpath>
+	      </setHeader>
+	      <setBody id="_setBody1">
+	        <simple>Enregistrement Laboratoire pour ${header.firstname} ${header.lastname} par ${header.udsCode}</simple>
+	      </setBody>
+	      <to id="_to1" uri="amq:queue:events"/>
+	    </route>
+	    <route id="doOrderTest">
+	      <from id="doOrderTestFrom" uri="direct:orderTest"/>
+	      <to id="_to2" uri="log:output"/>
+	    </route>
+	    <route id="doReturnResult">
+	      <from id="doReturnResultFrom" uri="direct:returnResult"/>
+	      <to id="_to3" uri="log:output"/>
+	    </route>
+   </camelContext>
+</beans>
