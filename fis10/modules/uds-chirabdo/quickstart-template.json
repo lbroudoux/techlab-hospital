@@ -30,7 +30,7 @@
     {
       "description": "Path within Git project to build; empty for root project directory.",
       "name": "CONTEXT_DIR",
-      "value": "modules/uds-chirabdo/",
+      "value": "fis10/modules/uds-chirabdo/",
       "required": false
     },
     {

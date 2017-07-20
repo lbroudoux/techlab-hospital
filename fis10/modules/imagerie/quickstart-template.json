@@ -30,7 +30,7 @@
     {
       "description": "Path within Git project to build; empty for root project directory.",
       "name": "CONTEXT_DIR",
-      "value": "modules/imagerie/",
+      "value": "fis10/modules/imagerie/",
       "required": false
     },
     {
