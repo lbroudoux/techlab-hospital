@@ -30,7 +30,7 @@
     {
       "description": "Path within Git project to build; empty for root project directory.",
       "name": "CONTEXT_DIR",
-      "value": "modules/event-bus/",
+      "value": "fis10/modules/event-bus/",
       "required": false
     },
     {

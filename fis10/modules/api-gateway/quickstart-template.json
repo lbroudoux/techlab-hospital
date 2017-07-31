@@ -30,7 +30,7 @@
     {
       "description": "Path within Git project to build; empty for root project directory.",
       "name": "CONTEXT_DIR",
-      "value": "modules/api-gateway/",
+      "value": "fis10/modules/api-gateway/",
       "required": false
     },
     {
