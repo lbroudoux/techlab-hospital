@@ -1,0 +1,32 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: fis20-configmap
+data:
+  hawkular-openshift-agent: |
+    endpoints:
+    - type: prometheus
+      protocol: http
+      port: 9779
+      path: /metrics
+      collection_interval: 30s
+      tags:
+        name: ${POD:label[project]}
+    - type: jolokia
+      protocol: https
+      port: 8778
+      collection_interval: 30s
+      credentials:
+        username: jolokia
+        password: secret:hosa-secret/password
+      path: /jolokia/
+      tags:
+        name: ${POD:label[project]}
+      metrics:
+      - name: java.lang:type=Threading#ThreadCount
+        id: the_thread_count
+        type: gauge
+      - name: java.lang:type=Memory#HeapMemoryUsage#*
+        type: gauge
+        description: Heap Memory Used ${2}
+        units: B
