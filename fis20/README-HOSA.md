@@ -1,4 +1,4 @@
-### Getting application metrics with HOSA
+## Getting application metrics with HOSA
 
 Hawkular OpenShit Agent can be used with Fuse Integration Services 2.0 applications to gather and later retrieve application metrics exposed with Jolokia. Promotheus endpoint should also be included into a near-future so that you'll be able to easily add any custom metrics.
 

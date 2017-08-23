@@ -1,5 +1,7 @@
 ## Installation
 
+*23-Aug-2017 update* We've complete this implementation with the addition of Application metrics monitoring using Hawkular OpenShift Agent. If your interested, just check the [documentation](https://github.com/lbroudoux/techlab-hospital/blob/master/fis20/README-HOSA.md).
+
 ### Pre-requisites
 
 It is assumed that you have some kind of OpenShift cluster instance running and available. This instance can take several forms depending on your environment and needs :
