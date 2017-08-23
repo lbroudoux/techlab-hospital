@@ -36,10 +36,10 @@ Installation of Grafana could be done into a shared project but for maximum flex
 
 For configuring the `Hawkular` datasource into Grafana, we will need a permanent token corresponding to a user authorized to access the `hawkular-metrics` service and read cluster metrics. This can be easily done creating a Service Account that way:
 
-    oc create sa view-metrics -n <techlab-project>
+    oc create sa view-metrics -n techlab-hospital
 
 ```sh
-$ oc describe sa/view-metrics -n <techlab-project>
+$ oc describe sa/view-metrics -n techlab-hospital
 Name:		view-metrics
 Namespace:	techlab-hospital
 Labels:		<none>
@@ -54,7 +54,7 @@ Tokens:            	view-metrics-token-t98qw
 ```
 The Token that is not shared with moutable secrets can then be used as a permament token but before that, we have to authorize the Service Account to access cluster metrics by having the `cluster-reader` role :
 
-    oc adm policy add-cluster-role-to-user cluster-reader system:serviceaccount:<techlab-project>:view-metrics
+    oc adm policy add-cluster-role-to-user cluster-reader system:serviceaccount:techlab-hospital:view-metrics
 
 Now we can retrieve the token and use it as a token within Grafana datasource edit panel:
 
