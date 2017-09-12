@@ -13,6 +13,8 @@ spec:
           env:
           - name: ACTIVEMQ_SERVICE_NAME
             value: broker-amq-tcp
+          - name: JAEGER_SERVER_HOSTNAME
+            value: jaeger-agent.jaeger-infra.svc.cluster.local
           ports:
           - containerPort: 9090
             name: camel

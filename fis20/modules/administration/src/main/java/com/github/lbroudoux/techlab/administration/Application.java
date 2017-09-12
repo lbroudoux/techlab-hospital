@@ -15,6 +15,7 @@
  */
 package com.github.lbroudoux.techlab.administration;
 
+import org.apache.camel.opentracing.starter.CamelOpenTracing;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ImportResource;
@@ -23,6 +24,7 @@ import org.springframework.context.annotation.ImportResource;
  * The Spring-boot main class.
  */
 @SpringBootApplication
+@CamelOpenTracing
 @ImportResource({"classpath:spring/amq.xml", "classpath:spring/camel-context.xml"})
 public class Application {
 

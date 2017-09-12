@@ -15,6 +15,8 @@ spec:
               cpu: "1.0"
 #              memory: 256Mi
           env:
+            - name: JAEGER_SERVER_HOSTNAME
+              value: jaeger-agent.jaeger-infra.svc.cluster.local
             - name: AB_JOLOKIA_PASSWORD_RANDOM
               value: false
             - name: AB_JOLOKIA_PASSWORD
@@ -25,4 +27,4 @@ spec:
           ports:
           - containerPort: 8181
             name: camel
-            protcol: TCP
+            protocol: TCP

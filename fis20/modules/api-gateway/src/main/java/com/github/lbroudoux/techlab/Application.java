@@ -19,6 +19,7 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.cxf.CxfEndpoint;
 import org.apache.camel.model.rest.RestBindingMode;
+import org.apache.camel.opentracing.starter.CamelOpenTracing;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ImportResource;
@@ -27,12 +28,13 @@ import org.springframework.context.annotation.ImportResource;
  * A spring-boot application that includes a Camel route builder to setup the Camel routes
  */
 @SpringBootApplication
+@CamelOpenTracing
 @ImportResource({"classpath:spring/camel-context.xml"})
 public class Application extends RouteBuilder {
 
 	Processor admitPatientComposer = new AdmitPatientComposer();
 	Processor getAllPatientsProcessor = new GetAllPatientsComposer();
-	
+
     // must have a main method spring-boot can run
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -67,7 +69,7 @@ public class Application extends RouteBuilder {
 		      </camel:get>
 		    </camel:rest>
 		 */
-        
+
 		restConfiguration("jetty")
 			.bindingMode(RestBindingMode.auto)
 			.contextPath("/api")
@@ -80,11 +82,11 @@ public class Application extends RouteBuilder {
 			.corsHeaderProperty("Access-Control-Allow-Origin", "*")
 			.corsHeaderProperty("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, CONNECT, PATCH")
 			.corsHeaderProperty("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
-		
+
 		rest("/hospital")
 			.post("/admission/{firstname}/{lastname}/{patientid}").to("direct:admission")
 			.get("/patients/all").to("direct:allpatients");
-		
+
 		from("direct:admission").routeId("doAdmission")
 			.log("Admission request processing")
 			.log("patient id: ${headers.patientid}")
@@ -99,7 +101,7 @@ public class Application extends RouteBuilder {
 //					+ "&serviceName={http://ws.administration.techlab.lbroudoux.github.com/}PatientEndpointService"
 //					+ "&portName={http://ws.administration.techlab.lbroudoux.github.com/}PatientEndpointPort")
 			.log("body: ${body}");
-		
+
 		from("direct:allpatients").routeId("doAllPatients")
 			.log("AllPatients request processing")
 			.process(getAllPatientsProcessor)
