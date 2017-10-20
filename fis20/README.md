@@ -1,6 +1,8 @@
 ## Installation
 
-*23-Aug-2017 update* We've complete this implementation with the addition of Application metrics monitoring using Hawkular OpenShift Agent. If your interested, just check the [documentation](https://github.com/lbroudoux/techlab-hospital/blob/master/fis20/README-HOSA.md).
+*20-Oct-2017 update* This implementation has been completed with the support of distributed tracing through Open Tracing / Jaeger additions. If you're interested, just check the [documentation](https://github.com/lbroudoux/techlab-hospital/blob/master/fis20/README-TRACING.md).
+
+*23-Aug-2017 update* We've complete this implementation with the addition of Application metrics monitoring using Hawkular OpenShift Agent. If you're interested, just check the [documentation](https://github.com/lbroudoux/techlab-hospital/blob/master/fis20/README-HOSA.md).
 
 ### Pre-requisites
 
