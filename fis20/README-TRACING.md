@@ -10,6 +10,8 @@ Here's a sample of a trace using Jaeger (an Open Tracing implementation) for the
 
 _Warning: Open Tracing support has been introduced since Apache Camel 2.19 that is not yet integrated into official Fuse Integration Services 2.0. The instructions here are mentioned to upgrade and adopt an existing FIS 2.O module._
 
+All the modifications below have been done on the `fis20-jaeger-tracing` branch in this Git repository. Be sure to checkout this branch for getting everything.
+
 ### Installation of Jaeger
 
 [Jaeger](http://jaeger.readthedocs.io/en/latest/) is an Open Tracing implementation originally developed within Uber and now open-sourced. It may be deployed as a bunch of components on Kubernetes or OpenShift but there's also an `all-in-one` for simple development environment.
