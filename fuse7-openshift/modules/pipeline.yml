@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: event-bus-pipeline
+  labels:
+    name: event-bus-pipeline
+  annotations:
+    pipeline.alpha.openshift.io/uses: '[{"name": "event-bus", "namespace": "techlab-hospital", "kind": "DeploymentConfig"}, {"name": "event-bus", "namespace": "techlab-hospital-prod", "kind": "DeploymentConfig"}]'
+spec:
+  triggers:
+    -
+      type: GitHub
+      github:
+        secret: secret101
+    -
+      type: Generic
+      generic:
+        secret: secret101
+  runPolicy: Serial
+  source:
+    type: None
+  strategy:
+    type: JenkinsPipeline
+    jenkinsPipelineStrategy:
+      jenkinsfile: |-
+        node ('maven') {
+          stage ('Build') {
+            sh '''
+              git clone http://gogs-fabric.40.113.129.20.nip.io/team/event-bus.git
+              cd event-bus
+              mvn clean package
+            '''
+            script {
+              openshift.withCluster() {
+                openshift.withProject('techlab-hospital') {
+                  openshift.selector("bc", "event-bus-s2i").startBuild("--from-file event-bus/target/event-bus-0.0.1-SNAPSHOT.jar", "--wait=true")
+                }
+              }
+            }
+          }
+          stage ('Deploy Dev') {
+            openshiftDeploy(namespace: 'techlab-hospital', depCfg:  'event-bus')
+          }
+          stage ('Acceptance Tests') {
+            sleep 13
+          }
+          stage ('Promote to Prod') {
+            openshiftTag(namespace: 'techlab-hospital', sourceStream:'event-bus', sourceTag:'latest', destinationStream:'event-bus', destinationTag:'promoteToProd')
+          }
+          stage ('Deploy Prod') {
+            openshiftDeploy(namespace: 'techlab-hospital-prod', depCfg:  'event-bus')
+          }
+        }
+  output:
+  resources:
+  postCommit:
