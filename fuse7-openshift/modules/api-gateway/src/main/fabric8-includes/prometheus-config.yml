@@ -1,0 +1,7 @@
+rules:
+  - pattern: 'org.apache.camel<context=MyCamel, type=routes, name=\"(.*)\"><>LastProcessingTime'
+    name: camel_last_processing_time
+    help: Last Processing Time [milliseconds]
+    type: GAUGE
+    labels:
+      route: $1

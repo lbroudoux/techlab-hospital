@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring       http://camel.apache.org/schema/spring/camel-spring.xsd">
+    <!-- Camel Routes -->
+    <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
+        <!--
+          The amqp component ensures to use the broker in the kubernetes cluster.
+        -->
+        <route id="admission-in">
+            <from id="_from1" uri="amqp:topic:admission"/>
+            <log id="invokation" message="Admission message received!"/>
+            <log id="invokation body" message="Body : ${body}"/>
+            <filter id="filterOrthoAdmission">
+                <xpath>/admission/udsCode = 'ORTHO'</xpath>
+                <to id="_to1" uri="direct:processMessage"/>
+            </filter>
+        </route>
+        <route id="processMessage">
+            <from id="_from2" uri="direct:processMessage"/>
+            <log id="logProcessedMessage" message="Processing message: ${body}"/>
+            <wireTap id="toNotifyAdmission" uri="direct:notifyAdmissionUDS"/>
+            <multicast id="_multicast1">
+                <to id="_to3" uri="direct:notifyLaboratoire"/>
+                <to id="_to4" uri="direct:notifyImagerie"/>
+            </multicast>
+        </route>
+        <route id="notifyAdmissionUDS">
+            <from id="_from3" uri="direct:notifyAdmissionUDS"/>
+            <setHeader headerName="udsCode" id="udsCode">
+                <xpath resultType="java.lang.String">/admission/udsCode/text()</xpath>
+            </setHeader>
+            <setHeader headerName="firstname" id="firstname">
+                <xpath resultType="java.lang.String">/admission/patient/firstname/text()</xpath>
+            </setHeader>
+            <setHeader headerName="lastname" id="lastname">
+                <xpath resultType="java.lang.String">/admission/patient/lastname/text()</xpath>
+            </setHeader>
+            <setBody id="eventBody">
+                <simple>Adm. Chirurgie Orthopédique de ${header.firstname} ${header.lastname}</simple>
+            </setBody>
+            <to id="_to2" uri="amqp:queue:events"/>
+        </route>
+        <route id="notifyLaboratoire">
+            <from id="_from4" uri="direct:notifyLaboratoire"/>
+            <setHeader headerName="patientId" id="patientId">
+                <xpath resultType="java.lang.String">/admission/patient/id/text()</xpath>
+            </setHeader>
+            <setHeader headerName="CamelHttpMethod" id="_setHeader1">
+                <constant>POST</constant>
+            </setHeader>
+            <to id="_to5" uri="http4://laboratoire:8080/camel/labo/enregistrement/$simple{headers.patientId}"/>
+        </route>
+        <route id="notifyImagerie">
+            <from id="_from5" uri="direct:notifyImagerie"/>
+            <log id="toto" message="Toto"/>
+            <log id="_log1" message="Notifying imagerie with admission: ${body}"/>
+            <to id="_to6" uri="amqp:queue:imagerie"/>
+        </route>
+    </camelContext>
+</beans>
